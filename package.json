@@ -1,0 +1,41 @@
+{
+  "name": "server_casa_subastas_g07-e02",
+  "version": "1.0.0",
+  "description": "API para el proyecto del Grupo 07 - Equipo 02, casa de subastas - Subastas Nacionales S.A.S",
+  "main": "index.js",
+  "scripts": {
+    "build": "babel src --out-dir dist",
+    "dev": "nodemon src/index.js --exec babel-node",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "MisionTIC2022",
+    "Grupo07-Equipo02",
+    "Casa",
+    "de",
+    "subastas"
+  ],
+  "author": "Mario Andrés Carreño",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "joi": "^17.4.2",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.0.12",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.3",
+    "nodemailer": "^6.7.0",
+    "socket.io": "^4.3.2"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.16.0",
+    "@babel/core": "^7.16.0",
+    "@babel/node": "^7.16.0",
+    "@babel/preset-env": "^7.16.0",
+    "nodemon": "^2.0.15"
+  }
+}
