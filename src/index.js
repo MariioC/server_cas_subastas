@@ -23,18 +23,20 @@ const PORT = process.env.PORT || 3000;
 // Creación de la APP
 const app = express();
 
-// MIDDLEWARES
+// Creación del servidor
+const server = createServer(app);
+
+// USO MIDDLEWARES
 app.use(cors());
 app.use(morgan("dev"));
 app.use(compression());
 app.use(urlencoded({ extended: false }));
 app.use(json());
 
-const server = createServer(app);
-
 // RUTAS
 app.use("/", express.static(__dirname + "/public"));
 app.use("/api", apiRoutes);
+
 
 // INICIAR EL SERVIDOR
 server.listen(PORT, async () => {

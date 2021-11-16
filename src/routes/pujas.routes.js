@@ -1,20 +1,21 @@
 import { Router } from 'express'
-import jwt from 'jsonwebtoken'
 
-import { config } from 'dotenv'
-config();
-
-import PujaModel from '../models/puja.model'
-import SubastaModel from '../models/subasta.model'
-
-import { verifyUserToken, IsInterno } from '../middleware/auth'
+// Validators
+import { verifyUserToken } from '../middleware/auth'
 import { validatorPuja } from '../middleware/validators/validatorPuja';
+
+// Controllers
+import { SubastasController } from '../controllers/subastas.controllers';
+import { PujasController } from '../controllers/pujas.controllers';
+
+import { prettierValorCOP, prettierFecha } from '../helpers/utils'
 
 export const pujasRoutes = Router()
 
-pujasRoutes.get('/', verifyUserToken, async (req, res) => {
+pujasRoutes.get('/:id_subasta', verifyUserToken, async (req, res) => {
+    const { id_subasta } = req.params
     try {
-        const pujas = await PujaModel.find()
+        const pujas = await PujasController.getPujasBySubasta(id_subasta)
         res.json({
             message: 'Hola desde el ENDPOINT pujas',
             pujas,
@@ -46,7 +47,7 @@ pujasRoutes.post('/new/:id_subasta', verifyUserToken, validatorPuja, async (req,
         const hora_puja = fecha_puja.toISOString().split('T')[1].substring(0, 5)
         
         // Valido si existe la subasta
-        const subasta = await SubastaModel.findById(id_subasta)
+        const subasta = await SubastasController.getSubastaById(id_subasta)
         if(!subasta) {
             return res.json({
                 error: 'No se ha realizado la puja, debido a que la subasta no existe o fue eliminada'
@@ -57,7 +58,7 @@ pujasRoutes.post('/new/:id_subasta', verifyUserToken, validatorPuja, async (req,
         if(Date.parse(date_puja) < Date.parse(subasta.fecha_inicio)) {
             const fecha_inicio = new Date(subasta.fecha_inicio).toISOString().split('T')[0]
             return res.json({
-                error: `Esta subasta dará inicio el ${fecha_inicio} a las ${subasta.hora_inicio}`
+                error: `Esta subasta dará inicio el ${prettierFecha(fecha_inicio)} a las ${subasta.hora_inicio}`
             })
         }
 
@@ -70,7 +71,7 @@ pujasRoutes.post('/new/:id_subasta', verifyUserToken, validatorPuja, async (req,
         if(Date.parse(date_puja) > Date.parse(subasta.fecha_fin)) {
             const fecha_fin = new Date(subasta.fecha_inicio).toISOString().split('T')[0]
             return res.json({
-                error: `Esta subasta ha finalizado el ${fecha_fin} a las ${subasta.hora_fin}`
+                error: `Esta subasta ha finalizado el ${prettierFecha(fecha_fin)} a las ${subasta.hora_fin}`
             })
         }
 
@@ -80,16 +81,18 @@ pujasRoutes.post('/new/:id_subasta', verifyUserToken, validatorPuja, async (req,
             })
         }
 
+        const maxPuja = await PujasController.getMaxPujaBySubasta(id_subasta)
+
+        if(maxPuja && maxPuja.valor >= valor) {
+            return res.json({
+                error: `La subasta ya tiene una puja por un valor mayor o igual al enviado\n\nValor actual de la mejor puja: ${prettierValorCOP(maxPuja.valor)}`
+            })
+        }
+
         const documento_pujador = data_token.documento
-
-        const puja = new PujaModel({
-            valor,
-            fecha_puja,
-            documento_pujador,
-            id_subasta
-        })
-
-       await puja.save()
+        const nombre_pujador = data_token.nombre
+        
+        const puja = await PujasController.createPuja({ valor, fecha_puja, nombre_pujador, documento_pujador, id_subasta })
 
         res.json({
             message: 'Puja realizada correctamente',

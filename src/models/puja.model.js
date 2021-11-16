@@ -13,6 +13,10 @@ const PujaSchema = new Schema({
         type: Boolean,
         default: false,
     },
+    nombre_pujador: {
+        type: String,
+        required: true
+    },
     documento_pujador: {
         type: Number,
         required: true

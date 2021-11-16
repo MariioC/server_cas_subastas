@@ -1,15 +1,14 @@
-import UsuarioModel from "../models/usuario.model";
+import UsuarioModel from '../models/usuario.model';
 
 export const UsuariosController = {
     async getUsuarioByDocumento(documento) {
-        try {
-            return await UsuarioModel.findOne({ documento });
-        } catch (error) {
-            console.log(error);
-            return null;
-        }
+        return await UsuarioModel.findOne({ documento })
     },
 
+    async getUsuarioByCorreo(correo) {
+        return await UsuarioModel.findOne({ correo })
+    },
+    
     async createUsuario({ nombre, correo, tipo_documento, documento, fecha_nacimiento, expedicion_documento, password, tipo_usuario }) {
         const usuario = new UsuarioModel({
             nombre,
@@ -20,8 +19,8 @@ export const UsuariosController = {
             expedicion_documento,
             password,
             tipo_usuario
-        });
+        })
 
-        return await usuario.save();
+        return await usuario.save()
     },
 };

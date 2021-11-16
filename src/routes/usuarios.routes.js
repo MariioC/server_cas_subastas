@@ -1,14 +1,10 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 
-import { config } from "dotenv";
-config();
-
-import UsuarioModel from "../models/usuario.model";
-
 import { hashPassword, verifyPassword } from "../helpers/authHelper";
 
 import { UsuariosController } from "../controllers/usuarios.controllers";
+
 import { validatorLogin, validatorUsuario } from "../middleware/validators/validatorUsuario";
 import { identifyUserToken, verifyUserToken } from "../middleware/auth";
 
@@ -27,7 +23,7 @@ usuariosRoutes.post("/registro", identifyUserToken, validatorUsuario, async (req
             });
         }
 
-        if (await UsuarioModel.findOne({ correo })) {
+        if (await UsuariosController.getUsuarioByCorreo(correo)) {
             return res.json({
                 error: "El correo ingresado ya se encuentra registrado en la plataforma",
             });
@@ -43,9 +39,8 @@ usuariosRoutes.post("/registro", identifyUserToken, validatorUsuario, async (req
 
         const usuario = result.toJSON();
         delete usuario.password;
-        delete usuario.__v;
 
-        const token = jwt.sign({ id: usuario._id, documento, tipo_usuario }, process.env.SECRET_KEY);
+        const token = jwt.sign({ id: usuario._id, nombre, documento, tipo_usuario }, process.env.SECRET_KEY);
 
         res.json({
             message: "Usuario registrado de manera correcta",
@@ -62,8 +57,10 @@ usuariosRoutes.post("/registro", identifyUserToken, validatorUsuario, async (req
 
 usuariosRoutes.post("/login", validatorLogin, async (req, res) => {
     const { documento, password } = req.body;
+
+    console.log(process.env.SECRET_KEY);
     try {
-        const result = await UsuarioModel.findOne({ documento });
+        const result = await UsuariosController.getUsuarioByDocumento(documento);
 
         if (!result) {
             return res.json({
@@ -78,11 +75,10 @@ usuariosRoutes.post("/login", validatorLogin, async (req, res) => {
                 error: "Contraseña incorrecta",
             });
         }
-
+        
         delete usuario.password;
-        delete usuario.__v;
 
-        const token = jwt.sign({ id: usuario._id, documento: usuario.documento, tipo_usuario: usuario.tipo_usuario || "externo" }, process.env.SECRET_KEY);
+        const token = jwt.sign({ id: usuario._id, nombre: usuario.nombre, documento: usuario.documento, tipo_usuario: usuario.tipo_usuario || "externo" }, process.env.SECRET_KEY);
 
         res.json({
             usuario,
@@ -97,10 +93,8 @@ usuariosRoutes.post("/login", validatorLogin, async (req, res) => {
 });
 
 usuariosRoutes.get("/", async (req, res) => {
-    const usuarios = await UsuarioModel.find();
     res.json({
         message: "Hola desde el ENDPOINT usuarios",
-        usuarios,
     });
 });
 
