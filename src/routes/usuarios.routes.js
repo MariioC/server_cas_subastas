@@ -28,7 +28,7 @@ usuariosRoutes.post("/registro", identifyUserToken, validatorUsuario, async (req
                 error: "El correo ingresado ya se encuentra registrado en la plataforma",
             });
         }
-
+        
         const password = await hashPassword(pass);
 
         if (data_token?.tipo_usuario != "admin") {
@@ -50,7 +50,7 @@ usuariosRoutes.post("/registro", identifyUserToken, validatorUsuario, async (req
     } catch (error) {
         console.log(error);
         res.json({
-            error: "Ha ocurrido un error inesperado en el registro. Inténtelo más tarde",
+            error: "Ha ocurrido un error inesperado en el registro",
         });
     }
 });
@@ -87,7 +87,7 @@ usuariosRoutes.post("/login", validatorLogin, async (req, res) => {
     } catch (error) {
         console.log(error);
         res.json({
-            error: "Ha ocurrido un error inesperado al iniciar sesión. Inténtelo más tarde",
+            error: "Ha ocurrido un error inesperado al iniciar sesión",
         });
     }
 });

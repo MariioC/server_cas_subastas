@@ -29,4 +29,10 @@ export const PujasController = {
 
         return await puja.save()
     },
+
+    async deletePujaById(id_puja) {
+        // return await PujaModel.find({ id_subasta, valor })
+        console.log(await PujaModel.findByIdAndRemove(id_puja))
+        return true
+    },
 };

@@ -34,7 +34,7 @@ app.use(urlencoded({ extended: false }));
 app.use(json());
 
 // RUTAS
-app.use("/", express.static(__dirname + "/public"));
+app.use(express.static(__dirname + "/public"));
 app.use("/api", apiRoutes);
 
 
@@ -42,7 +42,9 @@ app.use("/api", apiRoutes);
 server.listen(PORT, async () => {
     console.log('');
     console.log('\x1b[32m%s\x1b[0m', '---------------------------------------------------');
+
     console.log('\x1b[32m%s\x1b[0m', `  👂 - Sevidor iniciado en: http://localhost:${PORT}`);
+    
     console.log('\x1b[32m%s\x1b[0m', '---------------------------------------------------');
     console.log('');
 

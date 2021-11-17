@@ -7,11 +7,11 @@ const subastaSchema = Joi.object().keys({
         'string.empty': 'El campo "nombre de la subasta" es obligatorio',
         'any.required': 'El campo "nombre de la subasta" es obligatorio',
     }),
-    foto: Joi.string().trim().required().messages({
-        'string.base': 'El campo "foto subasta" debe ser de tipo texto',
-        'string.empty': 'El campo "foto subasta" es obligatorio',
-        'any.required': 'El campo "foto subasta" es obligatorio',
-    }),
+    // foto: Joi.string().trim().required().messages({
+    //     'string.base': 'El campo "foto subasta" debe ser de tipo texto',
+    //     'string.empty': 'El campo "foto subasta" es obligatorio',
+    //     'any.required': 'El campo "foto subasta" es obligatorio',
+    // }),
     descripcion: Joi.string().trim().required().messages({
         'string.base': 'El campo "descripción de la subasta" debe ser de tipo texto',
         'string.empty': 'El campo "descripción de la subasta" es obligatorio',

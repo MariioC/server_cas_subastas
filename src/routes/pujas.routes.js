@@ -23,7 +23,7 @@ pujasRoutes.get('/:id_subasta', verifyUserToken, async (req, res) => {
     } catch (error) {
         console.log(error)
         res.json({
-            error: 'Ha ocurrido un error inesperado al crear la subasta. Inténtelo más tarde',
+            error: 'Ha ocurrido un error inesperado al crear la subasta',
         })
     }
 });
@@ -38,13 +38,11 @@ pujasRoutes.post('/new/:id_subasta', verifyUserToken, validatorPuja, async (req,
 
         fecha_puja = fecha_puja ? new Date(fecha_puja) : new Date()
 
+        
         // Una vez tenga la fecha de la puja, le rersto el tiempo del timeZone para el cso de colombia serian 5 horas
         fecha_puja = new Date( fecha_puja.getTime() - fecha_puja.getTimezoneOffset() * 60000)
 
-        // Obtengo la fecha en formato (YYYY-mm-dd) de la puja
-        const date_puja = fecha_puja.toISOString().split('T')[0]
-        // Obtengo la hora en formato (HH:mm) de la puja
-        const hora_puja = fecha_puja.toISOString().split('T')[1].substring(0, 5)
+        console.log(fecha_puja);
         
         // Valido si existe la subasta
         const subasta = await SubastasController.getSubastaById(id_subasta)
@@ -55,34 +53,22 @@ pujasRoutes.post('/new/:id_subasta', verifyUserToken, validatorPuja, async (req,
         }
 
         // Valido si la puja esta siendo enviada dentro de las fechas de inicio y fin de la subasta
-        if(Date.parse(date_puja) < Date.parse(subasta.fecha_inicio)) {
+        if(Date.parse(fecha_puja) < Date.parse(subasta.fecha_inicio)) {
             const fecha_inicio = new Date(subasta.fecha_inicio).toISOString().split('T')[0]
             return res.json({
-                error: `Esta subasta dará inicio el ${prettierFecha(fecha_inicio)} a las ${subasta.hora_inicio}`
+                error: `Aún no puede realizar pujas. \n\nEsta subasta dará inicio el ${prettierFecha(fecha_inicio)} a las ${subasta.hora_inicio}`
             })
         }
 
-        if(Date.parse(`01/01/2011 ${hora_puja}`) < Date.parse(`01/01/2011 ${subasta.hora_inicio}`)) {
-            return res.json({
-                error: `Aún no puede realizar pujas en esta subasta.\n\nLa subasta dará inicio a las ${subasta.hora_inicio}`
-            })
-        }
-
-        if(Date.parse(date_puja) > Date.parse(subasta.fecha_fin)) {
+        if(Date.parse(fecha_puja) > Date.parse(subasta.fecha_fin)) {
             const fecha_fin = new Date(subasta.fecha_inicio).toISOString().split('T')[0]
             return res.json({
-                error: `Esta subasta ha finalizado el ${prettierFecha(fecha_fin)} a las ${subasta.hora_fin}`
+                error: `Ya no puede realizar pujas en esta subasta.\n\nEsta subasta finalizó el ${prettierFecha(fecha_fin)} a las ${subasta.hora_fin}`
             })
         }
 
-        if(Date.parse(date_puja) == Date.parse(subasta.fecha_fin) && Date.parse(`01/01/2011 ${hora_puja}`) > Date.parse(`01/01/2011 ${subasta.hora_fin}`)) {
-            return res.json({
-                error: `Ya no puede realizar pujas en esta subasta.\n\nLa subasta ha finalizado a las ${subasta.hora_fin}`
-            })
-        }
-
+        // Obtengo la puja mas alta de la subasta, y valido que el valor de la nueva puja, supere dicha puja
         const maxPuja = await PujasController.getMaxPujaBySubasta(id_subasta)
-
         if(maxPuja && maxPuja.valor >= valor) {
             return res.json({
                 error: `La subasta ya tiene una puja por un valor mayor o igual al enviado\n\nValor actual de la mejor puja: ${prettierValorCOP(maxPuja.valor)}`
@@ -102,7 +88,64 @@ pujasRoutes.post('/new/:id_subasta', verifyUserToken, validatorPuja, async (req,
     } catch (error) {
         console.log(error)
         res.json({
-            error: 'Ha ocurrido un error inesperado al realizar la puja. Inténtelo más tarde',
+            error: 'Ha ocurrido un error inesperado al realizar la puja',
+        })
+    }
+});
+
+pujasRoutes.delete('/:id_puja', verifyUserToken, async (req, res) => {
+    const { id_puja } = req.params
+
+    const { data_token } = req
+
+    try {
+
+        const puja = await PujasController.getPujaById(id_puja)
+        if(!puja) {
+            return res.json({
+                error: 'La puja que desea cancelar ya no existe'
+            })
+        }
+
+        if(puja.documento_pujador != data_token.documento) {
+            return res.json({
+                error: 'No es posible cancelar la puja'
+            })
+        }
+
+        // Una vez tenga la fecha de la puja, le rersto el tiempo del timeZone para el cso de colombia serian 5 horas
+        const subasta = await SubastasController.getSubastaById(puja.id_subasta)
+
+        if(!subasta) {
+            // Elimino la puja
+            await puja.remove()
+            return res.json({
+                message: 'Se ha cancelado la puja correctamente'
+            })
+        }
+
+        let fecha_cancelacion = new Date()
+        fecha_cancelacion = new Date( fecha_cancelacion.getTime() - fecha_cancelacion.getTimezoneOffset() * 60000)
+
+        if(Date.parse(fecha_cancelacion) > Date.parse(subasta.fecha_fin)) {
+            return res.json({
+                error: `La subasta finalizó, ya no es posible cancelar la puja`
+            })
+        }
+
+        // Elimino la puja
+        await puja.remove()
+
+        // TODO: Una vez se cancele la puja, se le debe notificar al usuario que realizo la puja anterior que su puja es la ganadora hasta el momento
+
+        res.json({
+            message: 'Se ha cancelado la puja correctamente'
+        })
+
+    } catch (error) {
+        console.log(error)
+        res.json({
+            error: 'Ha ocurrido un error inesperado al cancelar la puja',
         })
     }
 });
